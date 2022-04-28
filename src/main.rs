@@ -1,7 +1,8 @@
 use artnet_protocol::{ArtCommand, Error as ArtError, Output, Poll, PortAddress};
 use std::io::Error as IoError;
 use std::net::{ToSocketAddrs, UdpSocket};
-use std::time::Instant;
+use std::thread::sleep;
+use std::time::{Duration, Instant};
 
 use vibenet::{
     fixture::FixtureControl,
@@ -11,7 +12,7 @@ use vibenet::{
 fn main() {
     let mut server = ArtServer::new();
     server.connect().unwrap();
-    server.start().unwrap();
+    server.artnet_output().unwrap();
 }
 
 pub struct ArtServer {
@@ -60,7 +61,7 @@ impl ArtServer {
         Ok(())
     }
 
-    pub fn start(&mut self) -> Result<(), ArtServerError> {
+    pub fn artnet_poll(&mut self) -> Result<(), ArtServerError> {
         let socket = self.socket.as_ref().unwrap();
 
         let broadcast_addr = ("255.255.255.255", 6454)
@@ -98,33 +99,43 @@ impl ArtServer {
                     }
 
                     println!("Node {:?}", reply);
-
-                    let mut data = vec![0; 512];
-                    let time = self.start_time.elapsed().as_secs_f32();
-
-                    for mut fixture in self.fixtures.clone() {
-                        fixture.write_output(&mut data, time);
-                    }
-
-                    let port_address: PortAddress = 0.into();
-
-                    let command = ArtCommand::Output(Output {
-                        data: data.into(),
-                        port_address,
-                        ..Output::default()
-                    });
-                    let bytes = command
-                        .write_to_buffer()
-                        .map_err(|err| ArtServerError::Art(err))?;
-
-                    println!("Output: {:?}", bytes);
-
-                    socket
-                        .send_to(&bytes, &addr)
-                        .map_err(|err| ArtServerError::Io(err))?;
+                    println!("Addr {:?}", addr);
                 }
                 _ => {}
             }
+        }
+    }
+
+    pub fn artnet_output(&mut self) -> Result<(), ArtServerError> {
+        let addr = "192.168.60.99:6454";
+        let socket = self.socket.as_ref().unwrap();
+
+        loop {
+            let mut data = vec![0; 48];
+            let time = self.start_time.elapsed().as_secs_f32();
+
+            for mut fixture in self.fixtures.clone() {
+                fixture.write_output(&mut data, time);
+            }
+
+            let port_address: PortAddress = 0.into();
+
+            let command = ArtCommand::Output(Output {
+                data: data.into(),
+                port_address,
+                ..Output::default()
+            });
+            let bytes = command
+                .write_to_buffer()
+                .map_err(|err| ArtServerError::Art(err))?;
+
+            println!("Output: {:?}", bytes);
+
+            socket
+                .send_to(&bytes, &addr)
+                .map_err(|err| ArtServerError::Io(err))?;
+
+            sleep(Duration::from_millis(30));
         }
     }
 }
