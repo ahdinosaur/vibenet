@@ -1,6 +1,12 @@
 use artnet_protocol::{ArtCommand, Error as ArtError, Output, Poll};
+use std::boxed::Box;
 use std::io::Error as IoError;
 use std::net::{ToSocketAddrs, UdpSocket};
+
+use vibenet::{
+    fixture::FixtureControl,
+    fixtures::{Fixture, RGBW},
+};
 
 fn main() {
     let mut server = ArtServer::new();
@@ -10,6 +16,7 @@ fn main() {
 
 pub struct ArtServer {
     socket: Option<UdpSocket>,
+    fixtures: Vec<Fixture>,
 }
 
 #[derive(Debug)]
@@ -20,7 +27,13 @@ pub enum ArtServerError {
 
 impl ArtServer {
     pub fn new() -> Self {
-        Self { socket: None }
+        Self {
+            socket: None,
+            fixtures: vec![
+                Fixture::from(RGBW { address: 0 }),
+                Fixture::from(RGBW { address: 4 }),
+            ],
+        }
     }
 
     pub fn connect(&mut self) -> Result<(), ArtServerError> {
@@ -53,7 +66,7 @@ impl ArtServer {
 
         loop {
             let mut buffer = [0u8; 1024];
-            let (length, addr) = socket
+            let (length, _addr) = socket
                 .recv_from(&mut buffer)
                 .map_err(|err| ArtServerError::Io(err))?;
             let command = ArtCommand::from_buffer(&buffer[..length])
@@ -62,21 +75,30 @@ impl ArtServer {
             println!("Received {:?}", command);
 
             match command {
-                ArtCommand::Poll(_poll) => {
-                    // this will most likely be our own poll request, as this is broadcast to all devices on the network
-                }
+                ArtCommand::Poll(_poll) => {}
                 ArtCommand::PollReply(_reply) => {
-                    // this is an ArtNet node on the network. We can send commands to it like this:
+                    let mut data = vec![0; 512];
+                    let time = 1_f32;
+
+                    for mut fixture in self.fixtures.clone() {
+                        fixture.write_output(&mut data, time);
+                    }
+
                     let command = ArtCommand::Output(Output {
-                        data: vec![1, 2, 3, 4, 5].into(),
+                        data: data.into(),
                         ..Output::default()
                     });
                     let bytes = command
                         .write_to_buffer()
                         .map_err(|err| ArtServerError::Art(err))?;
+
+                    println!("Output: {:?}", bytes);
+
+                    /*
                     socket
                         .send_to(&bytes, &addr)
                         .map_err(|err| ArtServerError::Io(err))?;
+                    */
                 }
                 _ => {}
             }
