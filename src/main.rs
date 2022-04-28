@@ -1,7 +1,7 @@
-use artnet_protocol::{ArtCommand, Error as ArtError, Output, Poll};
-use std::boxed::Box;
+use artnet_protocol::{ArtCommand, Error as ArtError, Output, Poll, PortAddress};
 use std::io::Error as IoError;
 use std::net::{ToSocketAddrs, UdpSocket};
+use std::time::Instant;
 
 use vibenet::{
     fixture::FixtureControl,
@@ -15,6 +15,7 @@ fn main() {
 }
 
 pub struct ArtServer {
+    start_time: Instant,
     socket: Option<UdpSocket>,
     fixtures: Vec<Fixture>,
 }
@@ -28,10 +29,21 @@ pub enum ArtServerError {
 impl ArtServer {
     pub fn new() -> Self {
         Self {
+            start_time: Instant::now(),
             socket: None,
             fixtures: vec![
                 Fixture::from(RGBW { address: 0 }),
                 Fixture::from(RGBW { address: 4 }),
+                Fixture::from(RGBW { address: 8 }),
+                Fixture::from(RGBW { address: 12 }),
+                Fixture::from(RGBW { address: 16 }),
+                Fixture::from(RGBW { address: 20 }),
+                Fixture::from(RGBW { address: 24 }),
+                Fixture::from(RGBW { address: 28 }),
+                Fixture::from(RGBW { address: 32 }),
+                Fixture::from(RGBW { address: 36 }),
+                Fixture::from(RGBW { address: 40 }),
+                Fixture::from(RGBW { address: 44 }),
             ],
         }
     }
@@ -66,26 +78,39 @@ impl ArtServer {
 
         loop {
             let mut buffer = [0u8; 1024];
-            let (length, _addr) = socket
+            let (length, addr) = socket
                 .recv_from(&mut buffer)
                 .map_err(|err| ArtServerError::Io(err))?;
             let command = ArtCommand::from_buffer(&buffer[..length])
                 .map_err(|err| ArtServerError::Art(err))?;
 
-            println!("Received {:?}", command);
-
             match command {
                 ArtCommand::Poll(_poll) => {}
-                ArtCommand::PollReply(_reply) => {
+                ArtCommand::PollReply(reply) => {
+                    let name: Vec<u8> = reply
+                        .short_name
+                        .into_iter()
+                        .take_while(|v| *v != 0)
+                        .collect();
+
+                    if name != "CHAUVET".as_bytes().to_vec() {
+                        continue;
+                    }
+
+                    println!("Node {:?}", reply);
+
                     let mut data = vec![0; 512];
-                    let time = 1_f32;
+                    let time = self.start_time.elapsed().as_secs_f32();
 
                     for mut fixture in self.fixtures.clone() {
                         fixture.write_output(&mut data, time);
                     }
 
+                    let port_address: PortAddress = 0.into();
+
                     let command = ArtCommand::Output(Output {
                         data: data.into(),
+                        port_address,
                         ..Output::default()
                     });
                     let bytes = command
@@ -94,11 +119,9 @@ impl ArtServer {
 
                     println!("Output: {:?}", bytes);
 
-                    /*
                     socket
                         .send_to(&bytes, &addr)
                         .map_err(|err| ArtServerError::Io(err))?;
-                    */
                 }
                 _ => {}
             }

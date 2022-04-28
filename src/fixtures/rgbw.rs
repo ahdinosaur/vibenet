@@ -1,4 +1,5 @@
 use crate::fixture::FixtureControl;
+use std::f32::consts::PI;
 
 #[derive(Debug, Copy, Clone)]
 pub struct RGBW {
@@ -10,7 +11,12 @@ impl FixtureControl for RGBW {
         self.address
     }
 
-    fn output(&mut self, _time: f32) -> Vec<u8> {
-        vec![255, 0, 0, 0]
+    fn output(&mut self, time: f32) -> Vec<u8> {
+        vec![
+            (time.sin() * 256_f32) as u8,
+            (time.sin() * 256_f32) as u8,
+            (time.sin() * 256_f32) as u8,
+            0,
+        ]
     }
 }
