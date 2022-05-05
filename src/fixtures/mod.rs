@@ -7,6 +7,9 @@ pub mod rgbw;
 
 #[enum_dispatch(FixtureControl)]
 #[derive(Debug, Copy, Clone)]
-pub enum Fixture {
-    RGBW,
+pub enum Fixture<RGBWOutputFn>
+where
+    RGBWOutputFn: Fn(f32) -> Vec<u8> + Copy,
+{
+    RGBW(RGBW<RGBWOutputFn>),
 }

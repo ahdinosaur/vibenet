@@ -1,4 +1,5 @@
 use artnet_protocol::{ArtCommand, Error as ArtError, Output, Poll, PortAddress};
+use std::f32::consts::PI;
 use std::io::Error as IoError;
 use std::net::{ToSocketAddrs, UdpSocket};
 use std::thread::sleep;
@@ -29,22 +30,67 @@ pub enum ArtServerError {
 
 impl ArtServer {
     pub fn new() -> Self {
+        let output_fn = |time: f32| {
+            vec![
+                ((time * 0.1_f32).sin() * 256_f32) as u8,
+                ((time * 0.2_f32).sin() * 256_f32) as u8,
+                ((time * 0.01_f32).sin() * 256_f32) as u8,
+                0,
+            ]
+        };
+
         Self {
             start_time: Instant::now(),
             socket: None,
             fixtures: vec![
-                Fixture::from(RGBW { address: 0 }),
-                Fixture::from(RGBW { address: 4 }),
-                Fixture::from(RGBW { address: 8 }),
-                Fixture::from(RGBW { address: 12 }),
-                Fixture::from(RGBW { address: 16 }),
-                Fixture::from(RGBW { address: 20 }),
-                Fixture::from(RGBW { address: 24 }),
-                Fixture::from(RGBW { address: 28 }),
-                Fixture::from(RGBW { address: 32 }),
-                Fixture::from(RGBW { address: 36 }),
-                Fixture::from(RGBW { address: 40 }),
-                Fixture::from(RGBW { address: 44 }),
+                Fixture::from(RGBW {
+                    address: 0,
+                    output_fn,
+                }),
+                Fixture::from(RGBW {
+                    address: 4,
+                    output_fn,
+                }),
+                Fixture::from(RGBW {
+                    address: 8,
+                    output_fn,
+                }),
+                Fixture::from(RGBW {
+                    address: 12,
+                    output_fn,
+                }),
+                Fixture::from(RGBW {
+                    address: 16,
+                    output_fn,
+                }),
+                Fixture::from(RGBW {
+                    address: 20,
+                    output_fn,
+                }),
+                Fixture::from(RGBW {
+                    address: 24,
+                    output_fn,
+                }),
+                Fixture::from(RGBW {
+                    address: 28,
+                    output_fn,
+                }),
+                Fixture::from(RGBW {
+                    address: 32,
+                    output_fn,
+                }),
+                Fixture::from(RGBW {
+                    address: 36,
+                    output_fn,
+                }),
+                Fixture::from(RGBW {
+                    address: 40,
+                    output_fn,
+                }),
+                Fixture::from(RGBW {
+                    address: 44,
+                    output_fn,
+                }),
             ],
         }
     }

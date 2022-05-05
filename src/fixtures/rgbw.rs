@@ -1,22 +1,20 @@
 use crate::fixture::FixtureControl;
-use std::f32::consts::PI;
 
 #[derive(Debug, Copy, Clone)]
-pub struct RGBW {
+pub struct RGBW<OutputFn>
+where
+    OutputFn: Fn(f32) -> Vec<u8>,
+{
     pub address: usize,
+    pub output_fn: OutputFn,
 }
 
-impl FixtureControl for RGBW {
+impl<OutputFn> FixtureControl for RGBW<OutputFn> {
     fn address(&self) -> usize {
         self.address
     }
 
     fn output(&mut self, time: f32) -> Vec<u8> {
-        vec![
-            ((time * 0.1_f32).sin() * 256_f32) as u8,
-            ((time * 0.2_f32).sin() * 256_f32) as u8,
-            ((time * 0.01_f32).sin() * 256_f32) as u8,
-            0,
-        ]
+        self.output_fn(time)
     }
 }
