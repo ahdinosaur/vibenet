@@ -1,10 +1,7 @@
 use enum_dispatch::enum_dispatch;
 
 #[enum_dispatch]
-pub trait FixtureControl
-where
-    Self: Copy,
-{
+pub trait FixtureControl {
     fn address(&self) -> usize;
     fn output(&mut self, time: f32) -> Vec<u8>;
 

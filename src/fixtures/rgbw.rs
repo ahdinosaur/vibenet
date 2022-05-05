@@ -1,20 +1,17 @@
 use crate::fixture::FixtureControl;
 
-#[derive(Debug, Copy, Clone)]
-pub struct RGBW<OutputFn>
-where
-    OutputFn: Fn(f32) -> Vec<u8>,
-{
+#[derive()]
+pub struct RGBW {
     pub address: usize,
-    pub output_fn: OutputFn,
+    pub output_fn: Box<dyn Fn(f32) -> Vec<u8>>,
 }
 
-impl<OutputFn> FixtureControl for RGBW<OutputFn> {
+impl FixtureControl for RGBW {
     fn address(&self) -> usize {
         self.address
     }
 
     fn output(&mut self, time: f32) -> Vec<u8> {
-        self.output_fn(time)
+        (self.output_fn)(time)
     }
 }
