@@ -3,7 +3,8 @@ use crate::fixture::FixtureControl;
 #[derive()]
 pub struct RGBW {
     pub index: usize,
-    pub output_fn: Box<dyn Fn(f32) -> Vec<u8>>,
+    pub rgb_fun: Box<dyn Fn(f32) -> (u8, u8, u8)>,
+    pub white_fun: Box<dyn Fn(f32) -> u8>,
 }
 
 impl FixtureControl for RGBW {
@@ -16,6 +17,9 @@ impl FixtureControl for RGBW {
     }
 
     fn output(&mut self, time: f32) -> Vec<u8> {
-        (self.output_fn)(time)
+        let (r, g, b) = (self.rgb_fun)(time);
+        let w = (self.white_fun)(time);
+
+        vec![r, g, b, w]
     }
 }
