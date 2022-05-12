@@ -55,59 +55,59 @@ impl ArtServer {
             socket: None,
             fixtures: vec![
                 Fixture::from(RGBW {
-                    address: 0,
+                    index: 0,
                     output_fn: time_offset(Box::new(output_fn), 0_f32 * offset_mult),
                 }),
                 Fixture::from(RGBW {
-                    address: 4,
+                    index: 4,
                     output_fn: time_offset(Box::new(output_fn), 1_f32 * offset_mult),
                 }),
                 Fixture::from(RGBW {
-                    address: 8,
+                    index: 8,
                     output_fn: time_offset(Box::new(output_fn), 2_f32 * offset_mult),
                 }),
                 Fixture::from(RGBW {
-                    address: 12,
+                    index: 12,
                     output_fn: time_offset(Box::new(output_fn), 3_f32 * offset_mult),
                 }),
                 Fixture::from(RGBW {
-                    address: 16,
+                    index: 16,
                     output_fn: time_offset(Box::new(output_fn), 4_f32 * offset_mult),
                 }),
                 Fixture::from(RGBW {
-                    address: 20,
+                    index: 20,
                     output_fn: time_offset(Box::new(output_fn), 5_f32 * offset_mult),
                 }),
                 Fixture::from(RGBW {
-                    address: 24,
+                    index: 24,
                     output_fn: time_offset(Box::new(output_fn), 6_f32 * offset_mult),
                 }),
                 Fixture::from(RGBW {
-                    address: 28,
+                    index: 28,
                     output_fn: time_offset(Box::new(output_fn), 7_f32 * offset_mult),
                 }),
                 Fixture::from(RGBW {
-                    address: 32,
+                    index: 32,
                     output_fn: time_offset(Box::new(output_fn), 8_f32 * offset_mult),
                 }),
                 Fixture::from(RGBW {
-                    address: 36,
+                    index: 36,
                     output_fn: time_offset(Box::new(output_fn), 9_f32 * offset_mult),
                 }),
                 Fixture::from(RGBW {
-                    address: 40,
+                    index: 40,
                     output_fn: time_offset(Box::new(output_fn), 10_f32 * offset_mult),
                 }),
                 Fixture::from(RGBW {
-                    address: 44,
+                    index: 44,
                     output_fn: time_offset(Box::new(output_fn), 11_f32 * offset_mult),
                 }),
                 Fixture::from(RGBW {
-                    address: 57,
+                    index: 57,
                     output_fn: time_offset(Box::new(output_fn), 11_f32 * offset_mult),
                 }),
                 Fixture::from(RGBW {
-                    address: 61,
+                    index: 61,
                     output_fn: time_offset(Box::new(output_fn), 11_f32 * offset_mult),
                 }),
             ],
