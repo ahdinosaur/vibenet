@@ -89,7 +89,7 @@ impl VibeNet {
         let socket = self.socket.as_ref().unwrap();
 
         loop {
-            let mut data = vec![0; 65];
+            let mut data = vec![0; 155];
             let time = self.start_time.elapsed().as_secs_f32();
 
             for fixture in self.fixtures.iter_mut() {
@@ -107,13 +107,13 @@ impl VibeNet {
                 .write_to_buffer()
                 .map_err(|err| ArtServerError::Art(err))?;
 
-            println!("Output: {:?}", bytes);
+            // println!("Output: {:?}", bytes);
 
             socket
                 .send_to(&bytes, &addr)
                 .map_err(|err| ArtServerError::Io(err))?;
 
-            sleep(Duration::from_millis(5));
+            sleep(Duration::from_millis(20));
         }
     }
 }
