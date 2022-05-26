@@ -1,7 +1,8 @@
 use std::f32::consts::PI;
+use std::rc::Rc;
 
 use vibenet::{
-    fixtures::{Fixture, MovingHead, RgbwLine},
+    fixtures::{Fixture, MovingHead, RgbwLine, RgbwLineConfig},
     funs::{
         logged_fun, position_fun, rainbow_rgb_line_fun, ramp_u8_fun, sin_u8_line_fun, time_offset,
     },
@@ -26,8 +27,10 @@ fn main() {
     let fixtures = vec![
         Fixture::from(RgbwLine::new(
             rgbw_line_addresses,
-            rgbw_line_rgb_fun,
-            rgbw_line_white_fun,
+            RgbwLineConfig::Functional {
+                rgb_fun: Rc::new(rgbw_line_rgb_fun),
+                white_fun: Rc::new(rgbw_line_white_fun),
+            },
         )),
         Fixture::from(MovingHead {
             index: 100,
