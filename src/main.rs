@@ -1,17 +1,22 @@
 use std::f32::consts::PI;
 
 use vibenet::{
-    fixtures::{Fixture, MovingHead, RGBW},
-    funs::{logged_fun, position_fun, rainbow_rgb_fun, ramp_u8_fun, sin_u8_fun, time_offset},
+    fixtures::{Fixture, MovingHead, RgbwLine},
+    funs::{
+        logged_fun, position_fun, rainbow_rgb_line_fun, ramp_u8_fun, sin_u8_line_fun, time_offset,
+    },
     net::VibeNet,
 };
 
 fn main() {
-    let hue_mult = 11_f32;
-    let white_mult = 0.7_f32;
-    let rgb_offset_mult = 20_f32 / hue_mult;
-    let white_offset_mult = 20_f32 / hue_mult;
+    let rgbw_line_addresses = vec![1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 57, 61];
+    let hue_speed = 11_f32;
+    let hue_range = 0.5_f32;
+    let rgbw_line_rgb_fun = rainbow_rgb_line_fun(hue_speed, hue_range);
+    let white_speed = 0.7_f32;
+    let white_range = 0.2_f32;
     let white_max = 128_f32;
+    let rgbw_line_white_fun = sin_u8_line_fun(white_speed, white_range, white_max);
 
     let color_wheel_mult = 4_f32;
     let color_wheel_max = 128_f32;
@@ -19,88 +24,11 @@ fn main() {
     let gobo_wheel_max = 128_f32;
 
     let fixtures = vec![
-        Fixture::from(RGBW {
-            index: 0,
-            rgb_fun: time_offset(rainbow_rgb_fun(hue_mult), 0_f32 * rgb_offset_mult),
-            white_fun: time_offset(sin_u8_fun(white_mult, white_max), 0_f32 * white_offset_mult),
-        }),
-        Fixture::from(RGBW {
-            index: 4,
-            rgb_fun: time_offset(rainbow_rgb_fun(hue_mult), 1_f32 * rgb_offset_mult),
-            white_fun: time_offset(sin_u8_fun(white_mult, white_max), 1_f32 * white_offset_mult),
-        }),
-        Fixture::from(RGBW {
-            index: 8,
-            rgb_fun: time_offset(rainbow_rgb_fun(hue_mult), 2_f32 * rgb_offset_mult),
-            white_fun: time_offset(sin_u8_fun(white_mult, white_max), 2_f32 * white_offset_mult),
-        }),
-        Fixture::from(RGBW {
-            index: 12,
-            rgb_fun: time_offset(rainbow_rgb_fun(hue_mult), 3_f32 * rgb_offset_mult),
-            white_fun: time_offset(sin_u8_fun(white_mult, white_max), 3_f32 * white_offset_mult),
-        }),
-        Fixture::from(RGBW {
-            index: 16,
-            rgb_fun: time_offset(rainbow_rgb_fun(hue_mult), 4_f32 * rgb_offset_mult),
-            white_fun: time_offset(sin_u8_fun(white_mult, white_max), 4_f32 * white_offset_mult),
-        }),
-        Fixture::from(RGBW {
-            index: 20,
-            rgb_fun: time_offset(rainbow_rgb_fun(hue_mult), 5_f32 * rgb_offset_mult),
-            white_fun: time_offset(sin_u8_fun(white_mult, white_max), 5_f32 * white_offset_mult),
-        }),
-        Fixture::from(RGBW {
-            index: 24,
-            rgb_fun: time_offset(rainbow_rgb_fun(hue_mult), 6_f32 * rgb_offset_mult),
-            white_fun: time_offset(sin_u8_fun(white_mult, white_max), 6_f32 * white_offset_mult),
-        }),
-        Fixture::from(RGBW {
-            index: 28,
-            rgb_fun: time_offset(rainbow_rgb_fun(hue_mult), 7_f32 * rgb_offset_mult),
-            white_fun: time_offset(sin_u8_fun(white_mult, white_max), 7_f32 * white_offset_mult),
-        }),
-        Fixture::from(RGBW {
-            index: 32,
-            rgb_fun: time_offset(rainbow_rgb_fun(hue_mult), 8_f32 * rgb_offset_mult),
-            white_fun: time_offset(sin_u8_fun(white_mult, white_max), 8_f32 * white_offset_mult),
-        }),
-        Fixture::from(RGBW {
-            index: 36,
-            rgb_fun: time_offset(rainbow_rgb_fun(hue_mult), 9_f32 * rgb_offset_mult),
-            white_fun: time_offset(sin_u8_fun(white_mult, white_max), 9_f32 * white_offset_mult),
-        }),
-        Fixture::from(RGBW {
-            index: 40,
-            rgb_fun: time_offset(rainbow_rgb_fun(hue_mult), 10_f32 * rgb_offset_mult),
-            white_fun: time_offset(
-                sin_u8_fun(white_mult, white_max),
-                10_f32 * white_offset_mult,
-            ),
-        }),
-        Fixture::from(RGBW {
-            index: 44,
-            rgb_fun: time_offset(rainbow_rgb_fun(hue_mult), 11_f32 * rgb_offset_mult),
-            white_fun: time_offset(
-                sin_u8_fun(white_mult, white_max),
-                11_f32 * white_offset_mult,
-            ),
-        }),
-        Fixture::from(RGBW {
-            index: 56,
-            rgb_fun: time_offset(rainbow_rgb_fun(hue_mult), 12_f32 * rgb_offset_mult),
-            white_fun: time_offset(
-                sin_u8_fun(white_mult, white_max),
-                12_f32 * white_offset_mult,
-            ),
-        }),
-        Fixture::from(RGBW {
-            index: 60,
-            rgb_fun: time_offset(rainbow_rgb_fun(hue_mult), 13_f32 * rgb_offset_mult),
-            white_fun: time_offset(
-                sin_u8_fun(white_mult, white_max),
-                13_f32 * white_offset_mult,
-            ),
-        }),
+        Fixture::from(RgbwLine::new(
+            rgbw_line_addresses,
+            rgbw_line_rgb_fun,
+            rgbw_line_white_fun,
+        )),
         Fixture::from(MovingHead {
             index: 100,
             position_fun: logged_fun(time_offset(position_fun(), 0_f32)),
