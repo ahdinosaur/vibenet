@@ -1,9 +1,12 @@
+use std::f32::consts::PI;
+use std::fmt::Debug;
+
 use palette::{convert::IntoColor, Hsl, Srgb};
+
+/* rgb */
 
 type Rgb = (u8, u8, u8);
 type RgbFun = dyn Fn(f32) -> Rgb;
-type White = u8;
-type WhiteFun = dyn Fn(f32) -> White;
 
 pub fn rainbow_rgb_fun(hue_mult: f32) -> Box<RgbFun> {
     Box::new(move |time: f32| {
@@ -17,28 +20,45 @@ pub fn rainbow_rgb_fun(hue_mult: f32) -> Box<RgbFun> {
     })
 }
 
-pub fn osc_white_fun(white_mult: f32) -> Box<WhiteFun> {
-    Box::new(move |time: f32| ((((time / white_mult).sin() + 1_f32) / 2_f32) * 64_f32) as u8)
+/* moving head */
+
+type Position = (f32, f32, f32);
+type PositionFun = dyn Fn(f32) -> Position;
+
+pub fn position_fun() -> Box<PositionFun> {
+    Box::new(move |time: f32| {
+        let pan = ((time / PI / 4_f32).sin() + 1_f32) / 2_f32;
+        let tilt = ((PI - time / PI / 1_f32).sin() + 1_f32) / 2_f32;
+        let speed = 0.5_f32;
+
+        (pan, tilt, speed)
+    })
 }
 
-pub fn time_offset_u8(fun: Box<dyn Fn(f32) -> White>, offset: f32) -> Box<dyn Fn(f32) -> u8> {
+/* u8 */
+
+type U8Fun = dyn Fn(f32) -> u8;
+
+pub fn sin_u8_fun(mult: f32, max: f32) -> Box<U8Fun> {
+    Box::new(move |time: f32| ((((time / mult).sin() + 1_f32) / 2_f32) * max) as u8)
+}
+
+pub fn ramp_u8_fun(mult: f32, max: f32) -> Box<U8Fun> {
+    Box::new(move |time: f32| ((time * mult) % max) as u8)
+}
+
+/* utils */
+
+pub fn time_offset<T: 'static>(fun: Box<dyn Fn(f32) -> T>, offset: f32) -> Box<dyn Fn(f32) -> T> {
     Box::new(move |time: f32| fun(time + offset))
 }
 
-pub fn time_offset_u8_triplet(
-    fun: Box<dyn Fn(f32) -> (u8, u8, u8)>,
-    offset: f32,
-) -> Box<dyn Fn(f32) -> (u8, u8, u8)> {
-    Box::new(move |time: f32| fun(time + offset))
-}
+pub fn logged_fun<T: Debug + 'static>(fun: Box<dyn Fn(f32) -> T>) -> Box<dyn Fn(f32) -> T> {
+    Box::new(move |time: f32| {
+        let value = fun(time);
 
-pub fn time_offset_f32(fun: Box<dyn Fn(f32) -> f32>, offset: f32) -> Box<dyn Fn(f32) -> f32> {
-    Box::new(move |time: f32| fun(time + offset))
-}
+        println!("value: {:?}", value);
 
-pub fn time_offset_f32_triplet(
-    fun: Box<dyn Fn(f32) -> (f32, f32, f32)>,
-    offset: f32,
-) -> Box<dyn Fn(f32) -> (f32, f32, f32)> {
-    Box::new(move |time: f32| fun(time + offset))
+        value
+    })
 }
