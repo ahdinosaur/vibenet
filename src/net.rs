@@ -4,12 +4,13 @@ use std::net::{ToSocketAddrs, UdpSocket};
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-use crate::{fixture::FixtureControl, fixtures::Fixture};
-
-pub struct VibeNet {
+pub struct VibeNet<SceneController>
+where
+    SceneController: Fn(f32, &mut Vec<u8>) -> (),
+{
     start_time: Instant,
     socket: Option<UdpSocket>,
-    fixtures: Vec<Fixture>,
+    scene_controller: SceneController,
 }
 
 #[derive(Debug)]
@@ -18,12 +19,15 @@ pub enum ArtServerError {
     Art(ArtError),
 }
 
-impl VibeNet {
-    pub fn new(fixtures: Vec<Fixture>) -> Self {
+impl<SceneController> VibeNet<SceneController>
+where
+    SceneController: Fn(f32, &mut Vec<u8>) -> (),
+{
+    pub fn new(scene_controller: SceneController) -> Self {
         Self {
+            scene_controller,
             start_time: Instant::now(),
             socket: None,
-            fixtures,
         }
     }
 
@@ -92,9 +96,7 @@ impl VibeNet {
             let mut data = vec![0; 155];
             let time = self.start_time.elapsed().as_secs_f32();
 
-            for fixture in self.fixtures.iter_mut() {
-                fixture.write_output(&mut data, time);
-            }
+            (self.scene_controller)(time, &mut data);
 
             let port_address: PortAddress = 0.into();
 

@@ -2,11 +2,9 @@ use std::f32::consts::PI;
 use std::rc::Rc;
 
 use vibenet::{
-    fixtures::{Fixture, MovingHead, RgbwLine, RgbwLineConfig},
-    funs::{
-        logged_fun, position_fun, rainbow_rgb_line_fun, ramp_u8_fun, sin_u8_line_fun, time_offset,
-    },
+    fixtures::{MovingHead, Rgbw},
     net::VibeNet,
+    scenes::{MovingHeadFlower, RgbwRainbow},
 };
 
 fn main() {

@@ -1,129 +1,54 @@
-use crate::fixture::FixtureControl;
-use std::rc::Rc;
+use palette::Srgb;
 
-pub enum RgbwConfig {
-    Manual {
-        red: u8,
-        green: u8,
-        blue: u8,
-        white: u8,
-    },
-    Functional {
-        rgb_fun: Box<dyn Fn(f32) -> (u8, u8, u8)>,
-        white_fun: Box<dyn Fn(f32) -> u8>,
-    },
+use crate::fixture::FixtureControl;
+use crate::util::f32_to_u8;
+
+#[derive(Clone, Copy, Debug)]
+pub struct RgbwValue {
+    pub rgb: Srgb<f32>,
+    pub white: f32,
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct Rgbw {
     address: usize,
-    config: RgbwConfig,
+    value: RgbwValue,
 }
 
 impl Rgbw {
-    pub fn new(address: usize, config: RgbwConfig) -> Self {
-        Self { address, config }
+    pub fn new(address: usize, value: RgbwValue) -> Self {
+        Self { address, value }
     }
 }
 
 impl FixtureControl for Rgbw {
-    fn channels(&self) -> Box<dyn Iterator<Item = usize>> {
-        let index = self.address - 1;
-        Box::new(index..(index + 4))
+    type Value = RgbwValue;
+
+    fn address(&self) -> usize {
+        self.address
     }
 
-    fn output(&mut self, time: f32) -> Box<dyn Iterator<Item = u8>> {
-        match &self.config {
-            RgbwConfig::Manual {
-                red,
-                green,
-                blue,
-                white,
-            } => Box::new(vec![*red, *green, *blue, *white].into_iter()),
-
-            RgbwConfig::Functional { rgb_fun, white_fun } => {
-                let (red, green, blue) = rgb_fun(time);
-                let white = white_fun(time);
-
-                Box::new(vec![red, green, blue, white].into_iter())
-            }
-        }
-    }
-}
-
-#[derive(Clone)]
-pub enum RgbwLineConfig {
-    Manual {
-        red: u8,
-        green: u8,
-        blue: u8,
-        white: u8,
-    },
-    Functional {
-        rgb_fun: Rc<dyn Fn(f32, f32) -> (u8, u8, u8)>,
-        white_fun: Rc<dyn Fn(f32, f32) -> u8>,
-    },
-}
-
-pub struct RgbwLine {
-    addresses: Vec<usize>,
-    config: RgbwLineConfig,
-}
-
-impl RgbwLine {
-    pub fn new(addresses: Vec<usize>, config: RgbwLineConfig) -> Self {
-        Self { addresses, config }
-    }
-}
-
-impl FixtureControl for RgbwLine {
-    fn channels(&self) -> Box<dyn Iterator<Item = usize>> {
-        Box::new(
-            self.addresses
-                .clone()
-                .into_iter()
-                .map(|address| {
-                    let index = address - 1;
-
-                    index..(index + 4)
-                })
-                .flatten(),
-        )
+    fn length(&self) -> usize {
+        4
     }
 
-    fn output(&mut self, time: f32) -> Box<dyn Iterator<Item = u8>> {
-        let addresses = self.addresses.clone();
+    fn set(&mut self, value: Self::Value) {
+        self.value = value;
+    }
 
-        match self.config.clone() {
-            RgbwLineConfig::Manual {
-                red,
-                green,
-                blue,
-                white,
-            } => Box::new(
-                addresses
-                    .into_iter()
-                    .map(move |_| vec![red, green, blue, white])
-                    .flatten(),
-            ),
+    fn get(&self) -> Self::Value {
+        self.value
+    }
 
-            RgbwLineConfig::Functional { rgb_fun, white_fun } => {
-                let length = addresses.len() as f32;
+    fn outputs(&self) -> Vec<u8> {
+        let RgbwValue {
+            rgb: rgb_f32,
+            white: white_f32,
+        } = self.value;
+        let rgb_u8: Srgb<u8> = rgb_f32.into_format();
+        let (red_u8, green_u8, blue_u8) = rgb_u8.into_components();
+        let white_u8 = f32_to_u8(white_f32);
 
-                Box::new(
-                    addresses
-                        .into_iter()
-                        .map(move |address| {
-                            let index = (address - 1) as f32;
-                            let position = index / length;
-
-                            let (r, g, b) = rgb_fun(time, position);
-                            let w = white_fun(time, position);
-
-                            vec![r, g, b, w]
-                        })
-                        .flatten(),
-                )
-            }
-        }
+        vec![red_u8, green_u8, blue_u8, white_u8]
     }
 }
