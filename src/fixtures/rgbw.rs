@@ -9,6 +9,15 @@ pub struct RgbwValue {
     pub white: f32,
 }
 
+impl Default for RgbwValue {
+    fn default() -> Self {
+        Self {
+            rgb: Srgb::new(0_f32, 0_f32, 0_f32),
+            white: 0_f32,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct Rgbw {
     address: usize,
@@ -16,8 +25,11 @@ pub struct Rgbw {
 }
 
 impl Rgbw {
-    pub fn new(address: usize, value: RgbwValue) -> Self {
-        Self { address, value }
+    pub fn new(address: usize) -> Self {
+        Self {
+            address,
+            value: RgbwValue::default(),
+        }
     }
 }
 

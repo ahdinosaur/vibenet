@@ -12,6 +12,20 @@ pub struct MovingHeadValue {
     pub dimmer: f32,
 }
 
+impl Default for MovingHeadValue {
+    fn default() -> Self {
+        Self {
+            pan: 0_f32,
+            tilt: 0_f32,
+            speed: 0_f32,
+            color_wheel: 0_f32,
+            gobo_wheel: 0_f32,
+            strobe: 0_f32,
+            dimmer: 0_f32,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct MovingHead {
     address: usize,
@@ -19,8 +33,11 @@ pub struct MovingHead {
 }
 
 impl MovingHead {
-    pub fn new(address: usize, value: MovingHeadValue) -> Self {
-        Self { address, value }
+    pub fn new(address: usize) -> Self {
+        Self {
+            address,
+            value: MovingHeadValue::default(),
+        }
     }
 }
 

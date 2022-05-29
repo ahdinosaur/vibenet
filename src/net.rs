@@ -6,7 +6,7 @@ use std::time::{Duration, Instant};
 
 pub struct VibeNet<SceneController>
 where
-    SceneController: Fn(f32, &mut Vec<u8>) -> (),
+    SceneController: FnMut(f32, &mut Vec<u8>) -> (),
 {
     start_time: Instant,
     socket: Option<UdpSocket>,
@@ -21,7 +21,7 @@ pub enum ArtServerError {
 
 impl<SceneController> VibeNet<SceneController>
 where
-    SceneController: Fn(f32, &mut Vec<u8>) -> (),
+    SceneController: FnMut(f32, &mut Vec<u8>) -> (),
 {
     pub fn new(scene_controller: SceneController) -> Self {
         Self {
