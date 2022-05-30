@@ -1,58 +1,98 @@
 use crate::fixture::FixtureControl;
+use crate::util::{f32_to_double_u8, f32_to_u8};
 
-#[derive()]
+#[derive(Clone, Copy, Debug)]
+pub struct MovingHeadValue {
+    pub pan: f32,
+    pub tilt: f32,
+    pub speed: f32,
+    pub color_wheel: f32,
+    pub gobo_wheel: f32,
+    pub strobe: f32,
+    pub dimmer: f32,
+}
+
+impl Default for MovingHeadValue {
+    fn default() -> Self {
+        Self {
+            pan: 0_f32,
+            tilt: 0_f32,
+            speed: 0_f32,
+            color_wheel: 0_f32,
+            gobo_wheel: 0_f32,
+            strobe: 0_f32,
+            dimmer: 0_f32,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
 pub struct MovingHead {
-    pub index: usize,
-    // (pan, tilt, speed)
-    pub position_fun: Box<dyn Fn(f32) -> (f32, f32, f32)>,
-    pub color_wheel_fun: Box<dyn Fn(f32) -> u8>,
-    pub gobo_wheel_fun: Box<dyn Fn(f32) -> u8>,
-    // pub strobe_fun: Box<dyn Fn(f32) -> u8>
-    // pub dimmer_fun: Box<dyn Fn(f32) -> u8>
+    address: usize,
+    value: MovingHeadValue,
+}
+
+impl MovingHead {
+    pub fn new(address: usize) -> Self {
+        Self {
+            address,
+            value: MovingHeadValue::default(),
+        }
+    }
 }
 
 impl FixtureControl for MovingHead {
-    fn channels(&self) -> Box<dyn Iterator<Item = usize>> {
-        Box::new(self.index..(self.index + 11))
+    type Value = MovingHeadValue;
+
+    fn address(&self) -> usize {
+        self.address
     }
 
-    fn output(&mut self, time: f32) -> Box<dyn Iterator<Item = u8>> {
-        let (pan_f, tilt_f, speed_f) = (self.position_fun)(time);
-        let (pan_coarse, pan_fine) = float_to_double_int(pan_f);
-        let (tilt_coarse, tilt_fine) = float_to_double_int(tilt_f);
-        let color_wheel = (self.color_wheel_fun)(time);
-        let gobo_wheel = (self.gobo_wheel_fun)(time);
-        let strobe: u8 = 0;
-        let dimmer: u8 = 255;
-        let speed: u8 = float_to_int(speed_f);
-        let auto: u8 = 0;
-        let command: u8 = 0;
-
-        Box::new(
-            vec![
-                pan_coarse,
-                pan_fine,
-                tilt_coarse,
-                tilt_fine,
-                color_wheel,
-                gobo_wheel,
-                strobe,
-                dimmer,
-                speed,
-                auto,
-                command,
-            ]
-            .into_iter(),
-        )
+    fn length(&self) -> usize {
+        11
     }
-}
 
-fn float_to_int(value: f32) -> u8 {
-    (value * 256_f32) as u8
-}
+    fn set(&mut self, value: Self::Value) {
+        self.value = value;
+    }
 
-fn float_to_double_int(value: f32) -> (u8, u8) {
-    let coarse = (value * 256_f32) as u8;
-    let fine = (((value * 256_f32) % 1_f32) * 256_f32) as u8;
-    (coarse, fine)
+    fn get(&self) -> Self::Value {
+        self.value
+    }
+
+    fn outputs(&self) -> Vec<u8> {
+        let MovingHeadValue {
+            pan: pan_f32,
+            tilt: tilt_f32,
+            speed: speed_f32,
+            color_wheel: color_wheel_f32,
+            gobo_wheel: gobo_wheel_f32,
+            strobe: strobe_f32,
+            dimmer: dimmer_f32,
+        } = self.value;
+
+        let (pan_coarse, pan_fine) = f32_to_double_u8(pan_f32);
+        let (tilt_coarse, tilt_fine) = f32_to_double_u8(tilt_f32);
+        let color_wheel = f32_to_u8(color_wheel_f32);
+        let gobo_wheel = f32_to_u8(gobo_wheel_f32);
+        let strobe = f32_to_u8(strobe_f32);
+        let dimmer = f32_to_u8(dimmer_f32);
+        let speed = f32_to_u8(speed_f32);
+        let auto = 0;
+        let command = 0;
+
+        vec![
+            pan_coarse,
+            pan_fine,
+            tilt_coarse,
+            tilt_fine,
+            color_wheel,
+            gobo_wheel,
+            strobe,
+            dimmer,
+            speed,
+            auto,
+            command,
+        ]
+    }
 }
