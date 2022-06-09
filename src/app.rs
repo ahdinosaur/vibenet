@@ -1,17 +1,16 @@
-use std::any::Any;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
-use crate::fixture::FixtureControl;
+use crate::fixtures::Fixture;
 use crate::output::OutputControl;
-use crate::scene::SceneControl;
+use crate::scenes::Scene;
 
 pub struct VibeApp<Output>
 where
     Output: OutputControl,
 {
     start_time: Instant,
-    fixtures: Vec<Box<dyn FixtureControl<Value = dyn Any>>>,
-    scenes: Vec<Box<dyn SceneControl<Fixture = dyn Any, Config = dyn Any>>>,
+    fixtures: Vec<Fixture>,
+    scenes: Vec<Scene>,
     output: Output,
 }
 
@@ -24,11 +23,7 @@ impl<Output> VibeApp<Output>
 where
     Output: OutputControl,
 {
-    pub fn new(
-        fixtures: Vec<Box<dyn FixtureControl<Value = dyn Any>>>,
-        scenes: Vec<Box<dyn SceneControl<Fixture = dyn Any, Config = dyn Any>>>,
-        output: Output,
-    ) -> Self {
+    pub fn new(fixtures: Vec<Fixture>, scenes: Vec<Scene>, output: Output) -> Self {
         Self {
             start_time: Instant::now(),
             fixtures,
@@ -37,15 +32,15 @@ where
         }
     }
 
-    pub fn render(&mut self, mut output: Output) -> Result<(), Output::Error> {
+    pub fn render(&mut self) -> Result<(), Output::Error> {
         let mut data = vec![0; 155];
         let time = self.start_time.elapsed().as_secs_f32();
 
-        for scene in self.scenes {
+        for mut scene in self.scenes.clone() {
             scene.play(time);
             scene.write(&mut data);
         }
 
-        output.output(&mut data)
+        self.output.output(&mut data)
     }
 }

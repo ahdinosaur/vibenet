@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
-use std::sync::Arc;
+use std::rc::Rc;
 
 use crate::fixture::FixtureControl;
 use crate::fixtures::rgbw::{Rgbw, RgbwValue};
 use crate::funs::{f32_line_sin_fun, rgb_line_rainbow_fun};
 use crate::scene::SceneControl;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Clone, Copy, Serialize)]
 pub struct RgbwRainbowConfig {
     pub hue_speed: f32,
     pub hue_range: f32,
@@ -16,13 +16,14 @@ pub struct RgbwRainbowConfig {
     pub white_max: f32,
 }
 
+#[derive(Debug, Clone)]
 pub struct RgbwRainbow {
-    pub fixtures: Vec<Arc<RefCell<Rgbw>>>,
+    pub fixtures: Vec<Rc<RefCell<Rgbw>>>,
     pub config: RgbwRainbowConfig,
 }
 
 impl SceneControl for RgbwRainbow {
-    type Fixture = Arc<RefCell<Rgbw>>;
+    type Fixture = Rc<RefCell<Rgbw>>;
     type Config = RgbwRainbowConfig;
 
     fn fixtures(&mut self) -> Vec<Self::Fixture> {

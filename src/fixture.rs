@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::sync::Arc;
+use std::rc::Rc;
 
 pub trait FixtureControl {
     type Value;
@@ -23,7 +23,7 @@ pub trait FixtureControl {
     }
 }
 
-impl<Fixture> FixtureControl for Arc<RefCell<Fixture>>
+impl<Fixture> FixtureControl for Rc<RefCell<Fixture>>
 where
     Fixture: FixtureControl,
 {

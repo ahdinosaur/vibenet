@@ -1,17 +1,18 @@
 use std::cell::RefCell;
-use std::sync::Arc;
+use std::rc::Rc;
 use std::thread::sleep;
+use std::time::Duration;
 
 use vibenet::{
     app::VibeApp,
-    fixtures::{MovingHead, Rgbw},
+    fixtures::{Fixture, MovingHead, Rgbw},
+    output::OutputControl,
     outputs::Artnet,
-    scene::SceneControl,
-    scenes::{MovingHeadFlower, MovingHeadFlowerConfig, RgbwRainbow, RgbwRainbowConfig},
+    scenes::{MovingHeadFlower, MovingHeadFlowerConfig, RgbwRainbow, RgbwRainbowConfig, Scene},
 };
 
 fn main() {
-    let rgbw_fixtures: Vec<Arc<RefCell<Rgbw>>> = vec![
+    let rgbw_fixtures: Vec<Rc<RefCell<Rgbw>>> = vec![
         Rgbw::new(1),
         Rgbw::new(5),
         Rgbw::new(9),
@@ -28,10 +29,10 @@ fn main() {
         Rgbw::new(61),
     ]
     .into_iter()
-    .map(|fixture| Arc::new(RefCell::new(fixture)))
+    .map(|fixture| Rc::new(RefCell::new(fixture)))
     .collect();
 
-    let moving_head_fixtures: Vec<Arc<RefCell<MovingHead>>> = vec![
+    let moving_head_fixtures: Vec<Rc<RefCell<MovingHead>>> = vec![
         MovingHead::new(101),
         MovingHead::new(112),
         MovingHead::new(123),
@@ -39,7 +40,7 @@ fn main() {
         MovingHead::new(145),
     ]
     .into_iter()
-    .map(|fixture| Arc::new(RefCell::new(fixture)))
+    .map(|fixture| Rc::new(RefCell::new(fixture)))
     .collect();
 
     let hue_speed = 11_f32;
@@ -48,8 +49,8 @@ fn main() {
     let white_range = 0.2_f32;
     let white_max = 0.5_f32;
 
-    let mut rgb_rainbow_scene = RgbwRainbow {
-        fixtures: rgbw_fixtures,
+    let rgb_rainbow_scene = RgbwRainbow {
+        fixtures: rgbw_fixtures.clone(),
         config: RgbwRainbowConfig {
             hue_speed,
             hue_range,
@@ -68,8 +69,8 @@ fn main() {
     let gobo_wheel_mult = 0.005_f32;
     let gobo_wheel_max = 0.5_f32;
 
-    let mut moving_head_flower = MovingHeadFlower {
-        fixtures: moving_head_fixtures,
+    let moving_head_flower = MovingHeadFlower {
+        fixtures: moving_head_fixtures.clone(),
         config: MovingHeadFlowerConfig {
             pan_speed,
             pan_range,
@@ -82,17 +83,32 @@ fn main() {
         },
     };
 
-    let scene_controller = move |time: f32, dmx: &mut Vec<u8>| {
-        rgb_rainbow_scene.set(time);
-        rgb_rainbow_scene.write(dmx);
+    let fixtures = rgbw_fixtures
+        .clone()
+        .into_iter()
+        .map(|rgbw| Fixture::Rgbw(rgbw))
+        .chain(
+            moving_head_fixtures
+                .clone()
+                .into_iter()
+                .map(|moving_head| Fixture::MovingHead(moving_head)),
+        )
+        .collect();
 
-        moving_head_flower.set(time);
-        moving_head_flower.write(dmx);
-    };
+    let scenes = vec![
+        Scene::RgbwRainbow(rgb_rainbow_scene),
+        Scene::MovingHeadFlower(moving_head_flower),
+    ];
 
-    let mut app = VibeApp::new(scene_controller);
-    let mut output = net.connect().unwrap();
-    net.artnet_output().unwrap();
+    let mut output = Artnet::new();
 
-    VibeApp::sleep(Duration::from_millis(20));
+    output.setup().unwrap();
+
+    let mut app = VibeApp::new(fixtures, scenes, output);
+
+    loop {
+        app.render().unwrap();
+
+        sleep(Duration::from_millis(20));
+    }
 }
