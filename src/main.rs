@@ -1,11 +1,13 @@
 use std::cell::RefCell;
 use std::sync::Arc;
+use std::thread::sleep;
 
 use vibenet::{
+    app::VibeApp,
     fixtures::{MovingHead, Rgbw},
-    net::VibeNet,
+    outputs::Artnet,
     scene::SceneControl,
-    scenes::{MovingHeadFlower, RgbwRainbow},
+    scenes::{MovingHeadFlower, MovingHeadFlowerConfig, RgbwRainbow, RgbwRainbowConfig},
 };
 
 fn main() {
@@ -48,11 +50,13 @@ fn main() {
 
     let mut rgb_rainbow_scene = RgbwRainbow {
         fixtures: rgbw_fixtures,
-        hue_speed,
-        hue_range,
-        white_speed,
-        white_range,
-        white_max,
+        config: RgbwRainbowConfig {
+            hue_speed,
+            hue_range,
+            white_speed,
+            white_range,
+            white_max,
+        },
     };
 
     let pan_speed = 0.1_f32;
@@ -66,14 +70,16 @@ fn main() {
 
     let mut moving_head_flower = MovingHeadFlower {
         fixtures: moving_head_fixtures,
-        pan_speed,
-        pan_range,
-        tilt_speed,
-        tilt_range,
-        color_wheel_mult,
-        color_wheel_max,
-        gobo_wheel_mult,
-        gobo_wheel_max,
+        config: MovingHeadFlowerConfig {
+            pan_speed,
+            pan_range,
+            tilt_speed,
+            tilt_range,
+            color_wheel_mult,
+            color_wheel_max,
+            gobo_wheel_mult,
+            gobo_wheel_max,
+        },
     };
 
     let scene_controller = move |time: f32, dmx: &mut Vec<u8>| {
@@ -84,7 +90,9 @@ fn main() {
         moving_head_flower.write(dmx);
     };
 
-    let mut net = VibeNet::new(scene_controller);
-    net.connect().unwrap();
+    let mut app = VibeApp::new(scene_controller);
+    let mut output = net.connect().unwrap();
     net.artnet_output().unwrap();
+
+    VibeApp::sleep(Duration::from_millis(20));
 }

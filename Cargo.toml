@@ -9,3 +9,4 @@ edition = "2021"
 artnet_protocol = "0.4"
 enum_dispatch = "0.3"
 palette = "0.6"
+serde = { version = "1.0.137", features = ["derive"] }

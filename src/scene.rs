@@ -1,10 +1,14 @@
+use serde::{de::DeserializeOwned, Serialize};
+use std::fmt::Debug;
+
 use crate::fixture::FixtureControl;
 
 pub trait SceneControl {
     type Fixture: FixtureControl;
+    type Config: Serialize + DeserializeOwned + Debug;
 
     fn fixtures(&mut self) -> Vec<Self::Fixture>;
-    fn set(&mut self, time: f32);
+    fn play(&mut self, time: f32);
 
     fn write(&mut self, dmx: &mut Vec<u8>) {
         let fixtures = self.fixtures();
