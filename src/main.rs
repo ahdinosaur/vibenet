@@ -55,13 +55,13 @@ fn main() {
         white_max,
     };
 
-    let pan_speed = 0.4_f32;
+    let pan_speed = 0.1_f32;
     let pan_range = 1_f32;
-    let tilt_speed = 0.1_f32;
+    let tilt_speed = 0.05_f32;
     let tilt_range = 1_f32;
     let color_wheel_mult = 4_f32;
     let color_wheel_max = 0.5_f32;
-    let gobo_wheel_mult = 4_f32;
+    let gobo_wheel_mult = 0.01_f32;
     let gobo_wheel_max = 0.5_f32;
 
     let mut moving_head_flower = MovingHeadFlower {
