@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::ops::Range;
 use std::rc::Rc;
 
 pub trait FixtureControl {
@@ -12,10 +13,17 @@ pub trait FixtureControl {
 
     fn outputs(&self) -> Vec<u8>;
 
-    fn write(&mut self, dmx: &mut Vec<u8>) {
-        let index = self.address() - 1;
+    fn index(&self) -> usize {
+        self.address() - 1
+    }
+    fn channels(&self) -> Range<usize> {
+        let index = self.index();
         let length = self.length();
-        let channels = index..(index + length);
+
+        index..(index + length)
+    }
+    fn write(&mut self, dmx: &mut Vec<u8>) {
+        let channels = self.channels();
         let outputs = self.outputs();
         for (channel, output) in channels.zip(outputs) {
             dmx[channel] = output
