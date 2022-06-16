@@ -4,7 +4,7 @@ use std::thread::sleep;
 use std::time::Duration;
 
 use vibenet::{
-    app::VibeApp,
+    engine::VibeEngine,
     fixtures::{Fixture, MovingHead, Rgbw},
     output::OutputControl,
     outputs::Artnet,
@@ -104,10 +104,10 @@ fn main() {
 
     output.setup().unwrap();
 
-    let mut app = VibeApp::new(fixtures, scenes, output);
+    let mut engine = VibeEngine::new(fixtures, scenes, output);
 
     loop {
-        app.render().unwrap();
+        engine.render().unwrap();
 
         sleep(Duration::from_millis(20));
     }

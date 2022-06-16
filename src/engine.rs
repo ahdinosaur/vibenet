@@ -4,7 +4,7 @@ use crate::fixtures::Fixture;
 use crate::output::OutputControl;
 use crate::scenes::Scene;
 
-pub struct VibeApp<Output>
+pub struct VibeEngine<Output>
 where
     Output: OutputControl,
 {
@@ -20,7 +20,7 @@ pub enum VibeError<OutputError> {
     Output(OutputError),
 }
 
-impl<Output> VibeApp<Output>
+impl<Output> VibeEngine<Output>
 where
     Output: OutputControl,
 {
